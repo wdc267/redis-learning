@@ -1,0 +1,82 @@
+# ========== 构建产物 ==========
+HELP.md
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+*.ear
+# Maven Wrapper 需要入库（若后续执行 mvn wrapper:wrapper 生成）
+!**/.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ========== 日志与 JVM 崩溃文件 ==========
+logs/
+*.log
+hs_err_pid*
+replay_pid*
+*.pid
+.attach_pid*
+
+# ========== 临时 / 备份文件 ==========
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+*.swp
+*.swo
+*~
+*.hprof
+
+# ========== IntelliJ IDEA ==========
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ========== Eclipse / STS ==========
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+# ========== NetBeans ==========
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ========== VS Code ==========
+.vscode/
+
+# ========== 操作系统 ==========
+.DS_Store
+._*
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ========== 本地敏感配置 ==========
+# 含数据库 / Redis 明文口令的本地覆盖配置，不入库
+application-local.yaml
+application-local.yml
+application-local.properties
+*.local.yaml
+*.local.properties
+.env
+.env.local
+
+# ========== 其他 ==========
+.mvn/timing.properties
+# AI 协作工具的本地数据与记忆
+.workbuddy/
