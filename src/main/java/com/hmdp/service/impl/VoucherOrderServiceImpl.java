@@ -8,9 +8,11 @@ import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.IVoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.utils.RedisIdWorker;
+import com.hmdp.utils.SimpleRedisLock;
 import com.hmdp.utils.UserHolder;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     SeckillVoucherServiceImpl seckillVoucherService;
     @Autowired
     RedisIdWorker redisIdWorker;
+    @Autowired
+    StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Result seckillVoucher(Long voucherId){
@@ -51,11 +55,18 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         // 5.一人一单逻辑
         // 5.1.用户id
         Long userId = UserHolder.getUser().getId();
-        int count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
-        // 5.2.判断是否存在
-        if (count > 0) {
-            // 用户已经购买过了
-            return Result.fail("用户已经购买过一次！");
+//        int count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
+        //创建锁对象(新增代码)
+        SimpleRedisLock lock = new SimpleRedisLock("order:" + userId, stringRedisTemplate);
+        //获取锁对象
+        boolean isLock = lock.tryLock(1200);
+//        // 5.2.判断是否存在
+//        if (count > 0) {
+//            // 用户已经购买过了
+//            return Result.fail("用户已经购买过一次！");
+//        }
+        if (!isLock) {
+            return Result.fail("不允许重复下单");
         }
         //6，扣减库存
         boolean success = seckillVoucherService.update()
@@ -75,10 +86,14 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 //        // 7.3.代金券id
 //        voucherOrder.setVoucherId(voucherId);
 //        save(voucherOrder);
-        synchronized(userId.toString().intern()) {
+//        synchronized(userId.toString().intern()) {
+        try{
             IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
             return proxy.createVoucherOrder(voucherId);
+        } finally {
+            lock.unlock();
         }
+//        }
     }
 
     @Transactional
